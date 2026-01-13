@@ -11,7 +11,7 @@ HTTP 402 (Payment Required) ステータスコードを使用した、Solana上�
 **フロー:**
 1. クライアントがサーバーにリクエスト
 2. サーバーが402レスポンスで支払い要件を返す
-3. クライアントがUSDC転送トランザクションを作成・署名
+3. クライアントがUSDC送金トランザクションを作成・署名
 4. クライアントが`X-Payment`ヘッダーに署名済みトランザクションを含めて再リクエスト
 5. サーバーがトランザクションを検証・実行し、コンテンツを返す
 
@@ -155,10 +155,10 @@ spl-token create-account 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU \
 
 ### TODO 3: インストラクション検証
 
-トランザクション内のSPL Token Transfer命令を検証：
+トランザクション内のSPL Token Transferトランザクションを検証：
 - `tx.instructions` をループ
 - `TOKEN_PROGRAM_ID` のインストラクションを探す
-- Transfer命令（`data[0] === 3`）かチェック
+- Transferトランザクション（`data[0] === 3`）かチェック
 - 送金額を `data.readBigUInt64LE(1)` で取得
 - 送金先と金額を検証
 
@@ -218,7 +218,7 @@ const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
 ```
 残高チェックも実装（`payerTokenAccount.amount` を使用）
 
-### TODO 5: USDC転送命令を作成
+### TODO 5: USDC送金トランザクションを作成
 
 ```typescript
 const transferIx = createTransferInstruction(
@@ -235,7 +235,7 @@ const transferIx = createTransferInstruction(
 
 1. `connection.getLatestBlockhash()` でブロックハッシュ取得
 2. `new Transaction({ feePayer, blockhash, lastValidBlockHeight })`
-3. `tx.add(transferIx)` で命令追加
+3. `tx.add(transferIx)` でトランザクション追加
 4. `tx.sign(payer)` で署名（**送信はしない！**）
 
 ### TODO 7: x402ペイロード作成

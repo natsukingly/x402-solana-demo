@@ -46,7 +46,7 @@ app.get("/premium", async (req, res) => {
       // TODO 3: トランザクション内のインストラクションを検証
       // - tx.instructions をループ
       // - TOKEN_PROGRAM_ID のインストラクションを探す
-      // - Transfer命令 (data[0] === 3) かチェック
+      // - Transferトランザクション (data[0] === 3) かチェック
       // - 送金額を data.readBigUInt64LE(1) で取得
       // - 送金先が recipientTokenAccount で、金額が PRICE_USDC 以上か確認
       // - 条件を満たせば validTransfer = true

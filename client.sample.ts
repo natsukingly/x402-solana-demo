@@ -82,7 +82,7 @@ async function payAndAccess() {
     return;
   }
 
-  // 3. 転送命令を作成
+  // 3. 送金トランザクションを作成
   const transferIx = createTransferInstruction(
     payerTokenAccount.address,  // 送信元
     recipientTokenAccount,       // 送信先

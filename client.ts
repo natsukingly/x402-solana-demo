@@ -88,7 +88,7 @@ async function payAndAccess() {
   // ===========================================================================
 
   // ===========================================================================
-  // TODO 5: USDC転送命令を作成
+  // TODO 5: USDC送金トランザクションを作成
   // - createTransferInstruction() を使用
   // - 引数: source, destination, owner, amount, [], TOKEN_PROGRAM_ID
   // ===========================================================================
@@ -103,7 +103,7 @@ async function payAndAccess() {
   // 2. new Transaction() でトランザクションを作成
   //    - feePayer: payer.publicKey
   //    - blockhash, lastValidBlockHeight
-  // 3. tx.add() で転送命令を追加
+  // 3. tx.add() で送金トランザクションを追加
   // 4. tx.sign() で署名（送信はしない！）
   // ===========================================================================
 
