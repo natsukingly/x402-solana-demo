@@ -43,13 +43,13 @@ x402-demo/
 - **推奨**: 初心者向け、安定性重視
 
 ### 2. Kit版 (`kit/`)
-- **SDK**: `@solana/kit` + `@solana/web3.js`（併用）
+- **SDK**: `@solana/kit` + `@solana-program/token`
 - **トランザクション送信**: クライアント→サーバー→ブロックチェーン（直接送信）
 - **特徴**: 新しいAPI設計、将来の拡張性
 - **推奨**: 最新機能を使いたい場合
 
 ### 3. Kit + Facilitator版 (`kit-facilitator/`)
-- **SDK**: `@solana/kit` + `@solana/web3.js`（併用）
+- **SDK**: `@solana/kit` + `@solana-program/token`
 - **トランザクション送信**: クライアント→サーバー→**Facilitator**→ブロックチェーン
 - **特徴**: 手動でx402プロトコルを実装、外部パッケージ依存なし
 - **推奨**: x402プロトコルの内部を理解したい場合
