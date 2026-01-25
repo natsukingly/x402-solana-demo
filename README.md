@@ -19,17 +19,59 @@ HTTP 402 (Payment Required) ステータスコードを使用した、Solana上�
 
 ```
 x402-demo/
-├── server.ts         # サーバー（ハンズオン用のテンプレート）
-├── client.ts         # クライアント（ハンズオン用のテンプレート）
-├── server.sample.ts  # サーバー完成版
-├── client.sample.ts  # クライアント完成版
-├── server.json       # サーバーウォレット（要作成）
-├── client.json       # クライアントウォレット（要作成）
-├── .env              # 環境変数（要作成）
-├── .env.example      # 環境変数テンプレート
-├── package.json
+├── legacy/                # @solana/web3.js版（直接送信）
+│   └── ...
+├── kit/                   # @solana/kit版（直接送信）
+│   └── ...
+├── kit-facilitator/       # @solana/kit版 + Facilitator（手動実装）
+│   └── ...
+├── kit-facilitator-cdp/  # @solana/kit版 + Facilitator（@x402公式パッケージ）
+│   └── ...
+├── server.json            # サーバーウォレット（共有）
+├── client.json            # クライアントウォレット（共有）
 └── README.md
 ```
+
+## バージョン選択
+
+このプロジェクトは4つのバージョンを提供しています：
+
+### 1. Legacy版 (`legacy/`)
+- **SDK**: `@solana/web3.js`
+- **トランザクション送信**: クライアント→サーバー→ブロックチェーン（直接送信）
+- **特徴**: シンプルで直感的なAPI、広く使われている安定版
+- **推奨**: 初心者向け、安定性重視
+
+### 2. Kit版 (`kit/`)
+- **SDK**: `@solana/kit` + `@solana/web3.js`（併用）
+- **トランザクション送信**: クライアント→サーバー→ブロックチェーン（直接送信）
+- **特徴**: 新しいAPI設計、将来の拡張性
+- **推奨**: 最新機能を使いたい場合
+
+### 3. Kit + Facilitator版 (`kit-facilitator/`)
+- **SDK**: `@solana/kit` + `@solana/web3.js`（併用）
+- **トランザクション送信**: クライアント→サーバー→**Facilitator**→ブロックチェーン
+- **特徴**: 手動でx402プロトコルを実装、外部パッケージ依存なし
+- **推奨**: x402プロトコルの内部を理解したい場合
+
+### 4. Kit + Facilitator + x402パッケージ版 (`kit-facilitator-cdp/`)
+- **SDK**: `@solana/kit` + `@x402/svm` + `@x402/core`
+- **トランザクション送信**: クライアント→サーバー→**Facilitator**→ブロックチェーン
+- **特徴**: Coinbase公式パッケージを使用した正しい実装
+- **推奨**: 本番環境での使用
+
+### Facilitatorとは？
+
+Facilitatorはx402プロトコルにおける支払い処理の仲介サービスです：
+
+| 項目 | 直接送信（kit/legacy） | Facilitator経由 |
+|------|----------------------|-----------------|
+| トランザクション送信 | サーバーが直接送信 | Facilitatorが送信 |
+| ガス代負担 | クライアント | Facilitator（ガスレス可能） |
+| 検証 | サーバーが実装 | Facilitatorが実施 |
+| 複雑性 | シンプル | 中程度 |
+
+各ディレクトリの `README.md` を参照してください。
 
 ---
 
@@ -60,9 +102,18 @@ solana --version
 git clone <repository-url>
 cd x402-demo
 
-# 依存関係をインストール
+# 使用するバージョンを選択してインストール
+
+# Legacy版 (@solana/web3.js)
+cd legacy
+npm install
+
+# または Kit版 (@solana/kit)
+cd kit
 npm install
 ```
+
+**注意**: 各ディレクトリで独立して `npm install` を実行してください。
 
 ---
 
@@ -90,15 +141,22 @@ solana-keygen new --outfile client.json
 
 ### 2.3 環境変数の設定
 
-`.env.example` をコピーして `.env` を作成：
+使用するディレクトリ（`legacy` または `kit`）で `.env` を作成：
+
 ```bash
+# Legacy版の場合
+cd legacy
+cp .env.example .env
+
+# Kit版の場合
+cd kit
 cp .env.example .env
 ```
 
 `.env` を編集して `RECIPIENT_WALLET` を設定：
 ```bash
 # サーバーウォレットの公開鍵を確認
-solana-keygen pubkey server.json
+solana-keygen pubkey ../server.json
 
 # .env の RECIPIENT_WALLET を更新
 RECIPIENT_WALLET=上記で表示された公開鍵
@@ -124,6 +182,7 @@ solana airdrop 2 $(solana-keygen pubkey client.json)
 ### 2.6 サーバー用Token Accountの作成
 
 ```bash
+# ルートディレクトリから実行
 spl-token create-account 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU \
   --owner $(solana-keygen pubkey server.json) \
   --fee-payer server.json
@@ -133,7 +192,11 @@ spl-token create-account 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU \
 
 ## Part 3: ハンズオン - サーバー実装
 
-`server.ts` を開いて、各TODOセクションのコードを実装してください。
+**バージョンを選択してください:**
+- **Legacy版**: `legacy/server.ts` を使用（`@solana/web3.js`）
+- **Kit版**: `kit/server.ts` を使用（`@solana/kit`）
+
+選択したディレクトリの `server.ts` を開いて、各TODOセクションのコードを実装してください。
 
 ### TODO 1: 定数を設定
 
@@ -186,7 +249,11 @@ spl-token create-account 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU \
 
 ## Part 4: ハンズオン - クライアント実装
 
-`client.ts` を開いて、各TODOセクションのコードを実装してください。
+**バージョンを選択してください:**
+- **Legacy版**: `legacy/client.ts` を使用（`@solana/web3.js`）
+- **Kit版**: `kit/client.ts` を使用（`@solana/kit`）
+
+選択したディレクトリの `client.ts` を開いて、各TODOセクションのコードを実装してください。
 
 ### TODO 1: 接続とウォレット設定
 
@@ -266,8 +333,20 @@ const paidResponse = await fetch("http://localhost:3001/premium", {
 
 ### 5.1 サーバーの起動
 
+**Legacy版:**
 ```bash
-npx ts-node server.ts
+cd legacy
+npm run server
+# または
+npx ts-node server.sample.ts
+```
+
+**Kit版:**
+```bash
+cd kit
+npm run server
+# または
+npx ts-node server.sample.ts
 ```
 
 出力:
@@ -279,8 +358,20 @@ x402 Server running on http://localhost:3001
 
 別のターミナルで:
 
+**Legacy版:**
 ```bash
-npx ts-node client.ts
+cd legacy
+npm run client
+# または
+npx ts-node client.sample.ts
+```
+
+**Kit版:**
+```bash
+cd kit
+npm run client
+# または
+npx ts-node client.sample.ts
 ```
 
 成功時の出力例:
@@ -307,7 +398,9 @@ Transaction: https://explorer.solana.com/tx/xxxxx?cluster=devnet
 
 ## 解答
 
-困ったときは `server.sample.ts` と `client.sample.ts` を参照してください。
+困ったときは各ディレクトリの `server.sample.ts` と `client.sample.ts` を参照してください：
+- Legacy版: `legacy/server.sample.ts`, `legacy/client.sample.ts`
+- Kit版: `kit/server.sample.ts`, `kit/client.sample.ts`
 
 ---
 

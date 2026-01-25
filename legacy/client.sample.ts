@@ -1,4 +1,4 @@
-// x402 Client - 完成版サンプル
+// x402 Client - 完成版サンプル (@solana/web3.js版)
 import "dotenv/config";
 import {
   Connection,
@@ -37,7 +37,7 @@ const connection = new Connection(process.env.SOLANA_RPC_URL || "https://api.dev
 const PORT = process.env.PORT || 3001;
 
 // クライアントのウォレット（秘密鍵）
-const keypairData = JSON.parse(readFileSync("./client.json", "utf-8"));
+const keypairData = JSON.parse(readFileSync("../client.json", "utf-8"));
 const payer = Keypair.fromSecretKey(Uint8Array.from(keypairData));
 
 async function payAndAccess() {
@@ -146,3 +146,5 @@ async function payAndAccess() {
 }
 
 payAndAccess().catch(console.error);
+
+

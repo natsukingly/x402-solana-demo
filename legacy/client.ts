@@ -1,4 +1,4 @@
-// x402 Client - ハンズオン用テンプレート
+// x402 Client - ハンズオン用テンプレート (@solana/web3.js版)
 // 各 TODO セクションのコードを実装してください
 
 import {
@@ -142,3 +142,5 @@ async function payAndAccess() {
 }
 
 payAndAccess().catch(console.error);
+
+

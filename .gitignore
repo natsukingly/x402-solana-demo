@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.local
+
+# Wallet keys (sensitive)
+client.json
+server.json
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Personal/Private files
+BOOTCAMP_PLOT.md
+
+# Bootcamp starter templates
+kit-facilitator-cdp/server.starter.ts
+kit-facilitator-cdp/client.starter.ts
+kit-facilitator-cdp/server.starter-lv2.ts
+kit-facilitator-cdp/client.starter-lv2.ts
+kit-facilitator-cdp/server.starter-lv3.ts
+kit-facilitator-cdp/client.starter-lv3.ts
