@@ -16,7 +16,7 @@ import { ExactSvmScheme } from "@x402/svm/exact/server";
 // Note: USDC_MINT は指定不要 - @x402/svm がネットワークに応じて自動選択
 const RECIPIENT_WALLET = address(process.env.RECIPIENT_WALLET!);
 const PRICE_USDC = process.env.PRICE_USDC || "$0.01";
-const PORT = Number(process.env.PORT) || 3001;
+const PORT = Number(process.env.PORT) || 3000;
 
 // CAIP-2 ネットワーク識別子
 const SOLANA_NETWORKS = {
