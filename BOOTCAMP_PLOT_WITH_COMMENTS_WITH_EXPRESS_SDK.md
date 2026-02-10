@@ -2,6 +2,8 @@
 
 **所要時間**: 約59分
 
+シーケンス図は [docs/BOOTCAMP_DIAGRAMS_EXPRESS_SDK.md](docs/BOOTCAMP_DIAGRAMS_EXPRESS_SDK.md) にまとめています。
+
 ---
 
 ## 実現したいこと
@@ -235,28 +237,7 @@ Next.jsベースで、x402の支払いフローが既に組み込まれていま
 
 ### 想定しているコメントの例
 
-**画面に表示（シーケンス図）:**
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant S as Server
-    participant F as Facilitator
-    participant B as Solana
-
-    C->>S: 1. HTTPリクエスト
-    S-->>C: 2. 402 + PaymentRequired
-
-    Note over C: 3. PaymentPayload生成（署名）
-
-    C->>S: 4. HTTPリクエスト + PAYMENT-SIGNATURE
-    S->>F: 5. /verify
-    F-->>S: 6. 検証OK
-    S->>F: 7. /settle
-    F->>B: 8. トランザクション送信
-    B-->>F: 9. confirmed
-    F-->>S: 10. success
-    S-->>C: 11. 200 + Content
-```
+**画面に表示（シーケンス図）:** [docs/BOOTCAMP_DIAGRAMS_EXPRESS_SDK.md](docs/BOOTCAMP_DIAGRAMS_EXPRESS_SDK.md#3-アーキテクチャfacilitatorの役割) を参照
 
 ```
 「シーケンス図を見ていきます。先ほどのデモの裏側で何が起きていたか、この図で理解しましょう。
@@ -310,41 +291,7 @@ Serverは200 OKと共にコンテンツを返します。デモで猫のコン�
 このシステムの動作フローを別のバージョンのシーケンス図で理解していきます。」
 ```
 
-**画面に表示（ハンズオンで作成したシステムのシーケンス図）:**
-```mermaid
-sequenceDiagram
-    participant C as Client(client.ts)
-    participant S as Server(server.ts)
-    participant F as Facilitator(x402.org)
-    participant B as Solana(Devnet)
-
-    Note right of C: ── 1回目のリクエスト（支払いなし → 402） ──
-
-    Note over C: fetch("/premium")
-    C->>S: 1. GET /premium
-    Note over S: paymentMiddleware が自動処理→ 支払いヘッダーなし → 402返却
-    S-->>C: 2. 402 + 支払い要件（価格・payTo・network）
-
-    Note right of C: ── クライアント側の支払い準備 ──
-
-    Note over C: getPaymentRequiredResponse()→ 402レスポンスから支払い要件を抽出
-    Note over C: createPaymentPayload(paymentRequired)→ USDCトランスファーTx作成・署名
-    Note over C: encodePaymentSignatureHeader(payload)→ ヘッダー形式にエンコード
-
-    Note right of C: ── 2回目のリクエスト（支払いあり → 200） ──
-
-    Note over C: fetch("/premium", { headers })
-    C->>S: 3. GET /premium + PAYMENT-SIGNATURE
-    Note over S: paymentMiddleware が自動処理→ 支払いヘッダーあり → 検証・決済へ
-    S->>F: 4. POST /verify（署名検証）
-    F-->>S: 5. 検証OK
-    S->>F: 6. POST /settle（決済実行）
-    F->>B: 7. Tx送信（USDCトランスファー）
-    B-->>F: 8. confirmed
-    F-->>S: 9. success + tx hash
-    Note over S: ミドルウェア通過 → ルートハンドラーへ
-    S-->>C: 10. 200 OK + Content
-```
+**画面に表示（ハンズオンで作成したシステムのシーケンス図）:** [docs/BOOTCAMP_DIAGRAMS_EXPRESS_SDK.md](docs/BOOTCAMP_DIAGRAMS_EXPRESS_SDK.md#4-0-ハンズオンで作成するシステムのフロー) を参照
 
 ```
 「
@@ -593,28 +540,7 @@ curl http://localhost:3001/premium
 
 ### 5-0. クライアント実装の概要・キーペア生成・USDC入金（3分）
 
-**画面に表示（シーケンス図）:**
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant S as Server
-    participant F as Facilitator
-    participant B as Solana
-
-    C->>S: 1. HTTPリクエスト
-    S-->>C: 2. 402 + PaymentRequired
-
-    Note over C: 3. PaymentPayload生成（署名）
-
-    C->>S: 4. HTTPリクエスト + PAYMENT-SIGNATURE
-    S->>F: 5. /verify
-    F-->>S: 6. 検証OK
-    S->>F: 7. /settle
-    F->>B: 8. トランザクション送信
-    B-->>F: 9. confirmed
-    F-->>S: 10. success
-    S-->>C: 11. 200 + Content
-```
+**画面に表示（シーケンス図）:** [docs/BOOTCAMP_DIAGRAMS_EXPRESS_SDK.md](docs/BOOTCAMP_DIAGRAMS_EXPRESS_SDK.md#5-0-クライアント実装の概要) を参照
 
 **想定しているコメントの例:**
 ```
