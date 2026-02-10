@@ -67,7 +67,7 @@ async function payAndAccess() {
     const paymentHeaders = client.encodePaymentSignatureHeader(paymentPayload);
 
     const paidResponse = await fetch(`${SERVER_URL}/premium`, {
-      headers: paymentHeaders as Record<string, string>,
+      headers: { ...paymentHeaders },
     });
 
     if (paidResponse.status === 200) {

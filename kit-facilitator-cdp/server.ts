@@ -39,9 +39,6 @@ function createExpressAdapter(req: Request): HTTPAdapter {
     getUrl: () => req.originalUrl,
     getAcceptHeader: () => req.header("accept") || "*/*",
     getUserAgent: () => req.header("user-agent") || "",
-    getQueryParams: () => req.query as Record<string, string | string[]>,
-    getQueryParam: (name: string) => req.query[name] as string | string[] | undefined,
-    getBody: () => req.body,
   };
 }
 
