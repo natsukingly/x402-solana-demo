@@ -85,7 +85,7 @@
 「こんにちは、ブロックチェーンエンジニアの山口夏生です。 
 
 このセクションでは、x402という決済プロトコルを使って、
-Solana上で少額決済を実現するアプリケーションを作っていきます。
+Solana上で少額決済のアプリケーションを作っていきます。
 
 x402とは、HTTPの402ステータスコード「Payment Required」を活用した支払いフローです。
 Solanaのような高速・低コストなブロックチェーンと組み合わせることで、
@@ -302,6 +302,15 @@ ClientとServerは、nodejs環境で機能するtypescriptのコードです。
 また今回は最小限の実装なので、Web画面は作成しません。
 ブロックチェーンは、引き続きSolana Devnetです。
 Facilitatorはコインベースのファシリテーターを利用します。
+
+サーバー側では、paymentMiddlewareが重要な役割を果たします。
+支払いヘッダーがなければ402と支払い要件を返し、
+支払いヘッダーがあればFacilitatorで検証・決済を行い、通過すればコンテンツを返します。
+
+クライアント側では、まず402レスポンスから支払い要件を抽出します。
+次にウォレットで署名し、署名済みトランザクションを作成します。
+その値をエンコードし、
+2回目のリクエスト時にPAYMENT-SIGNATUREヘッダーとして付与します。
 」
 ```
 
@@ -547,11 +556,11 @@ curl http://localhost:3001/premium
 「次はクライアントを作成します。
 クライアントは支払いを行う側、つまりユーザーやAIエージェントの役割です。
 
-シーケンス図を見ると、クライアントが行う処理は以下の4つです。
-ステップ1: サーバーにHTTPリクエストを送信します。
-ステップ2: サーバーから402と支払い要件を受け取ります。
-ステップ3: 支払い要件に基づいて、署名済みトランザクションを作成します。
-ステップ4: 署名済みトランザクションをヘッダーに含めて、サーバーに再リクエストします。
+シーケンス図を見て、クライアントが行う処理を再度確認していきましょう。。
+サーバーにHTTPリクエストを送信します。
+サーバーから402と支払い要件を受け取ります。
+支払い要件に基づいて、署名済みトランザクションを作成します。
+署名済みトランザクションをヘッダーに含めて、サーバーに再リクエストします。
 
 サーバー側の実装は完了しているので、クライアント側を実装すれば、ステップ11で有料コンテンツが返ってくるようになります。
 
@@ -560,7 +569,7 @@ curl http://localhost:3001/premium
 
 **キーペア生成:**
 ```bash
-# サーバー側と同様に、クライアント用のキーペアを生成します。
+# クライアント用のキーペアを生成します。
 solana-keygen new --outfile client.json --no-bip39-passphrase
 ```
 
@@ -582,16 +591,10 @@ solana-keygen pubkey client.json
 # ネットワークを「Solana Devnet」に設定して、アドレスを入力します。
 # これでテスト用のUSDCがウォレットに入金されます。
 # なお、場合によってはトランザクション手数料（ガス代）のSOLを用意する必要がありますが、今回の仕様ではファシリテーターが負担するような仕様になっています。
-```
 
-```
-「クライアントは支払い側なので、ウォレットにUSDCが必要です。
-Circle Faucetでテスト用のUSDCを取得します。
-なお、トランザクション手数料はCoinbaseのFacilitatorが負担してくれるので、SOLを用意する必要はありません。
-
-（ブラウザでfaucetを操作）
-
-入金が確認できました。これでクライアントの準備は完了です。」
+# （ブラウザでfaucetを操作）
+# エクスプローラーで確認
+# 入金が確認できました。これでクライアントの準備は完了です。」
 ```
 
 ---
@@ -600,19 +603,25 @@ Circle Faucetでテスト用のUSDCを取得します。
 
 **ファイル作成:**
 ```bash
+// ではClient側のファイルを作成して、実装に移ります。
 code client.ts
 ```
 
 **コーディング（1行ずつ手入力）:**
 ```typescript
-// x402 Client - Solana USDC Payment
-// まず、fsからreadFileSyncをインポートしますね。client.jsonファイルを読み込むために使います。
+// 必要なライブラリをインポートしていきましょう。
+//　先ほど生成したキーペアのclient.jsonファイルを読み込むためのモジュールをインポートしていきます。。
 import { readFileSync } from "fs";
-// 次に、@solana/kitからcreateKeyPairSignerFromBytesをインポートします。生成したキーペアデータから、トランザクションに署名するためのキーペアオブジェクトを作成するために使います。
+
+// 次に、@solana/kitからcreateKeyPairSignerFromBytesをインポートします。
 import { createKeyPairSignerFromBytes } from "@solana/kit";
-// @x402/core/clientと@x402/core/httpは、クライアント側のx402機能を提供します。
+// 生成したキーペアデータから、トランザクションに署名するためのキーペアオブジェクトを作成するために使います。
+
+// x402のクライアントライブラリをインポートしていきます。 
 import { x402Client } from "@x402/core/client";
 import { x402HTTPClient } from "@x402/core/http";
+// @x402/core/clientと@x402/core/httpは、クライアント側のx402機能を提供します。
+
 // 続いて、@x402/svmからtoClientSvmSignerをインポートします。
 // キーペアオブジェクトをx402形式に変換するアダプターです。
 import { toClientSvmSigner } from "@x402/svm";
@@ -628,7 +637,7 @@ import { registerExactSvmScheme } from "@x402/svm/exact/client";
 **想定しているコメントの例:**
 ```
 「次に、ウォレットの読み込み処理を実装します。
-先ほど生成したclient.jsonファイルからキーペアを読み込みます。」
+先ほど生成したclient.jsonファイルからキーペアを読み込みます。
 ```
 
 **コーディング（1行ずつ手入力）:**
@@ -637,6 +646,8 @@ import { registerExactSvmScheme } from "@x402/svm/exact/client";
 // loadPayer関数を定義します。
 async function loadPayer() {
   const keypairData = JSON.parse(readFileSync("client.json", "utf-8"));
+  // client.jsonを読み込み、キーペアのバイト配列を取得
+  // バイト配列をUint8Arrayに変換し、署名用オブジェクトを作成（支払いTxの署名に使用）
   return await createKeyPairSignerFromBytes(Uint8Array.from(keypairData));
 }
 ```
@@ -666,9 +677,9 @@ async function payAndAccess() {
 
   // 続いて、x402Clientを作成します。
   const coreClient = new x402Client();
-  // コアクライアントにサーバーと同じexactスキームを登録。createPaymentPayload呼び出し時に、402の支払い要件に応じてTx作成・署名されます。
+  // コアクライアントにサーバーと同じexactスキームを登録。
   registerExactSvmScheme(coreClient, { signer });
-  // 最後に、x402HTTPClientを作成しますね。これはHTTP通信のラッパーです。
+  // 最後に、x402HTTPClientを作成しますね。これはx402に対応させるためのHTTP通信のラッパーです。
   const client = new x402HTTPClient(coreClient);
 ```
 
@@ -681,11 +692,6 @@ async function payAndAccess() {
 「次に、サーバーにリクエストを送ります。
 支払いヘッダーなしでアクセスしますので、
 402 Payment Requiredが返ってくるはずです。
-
-レスポンスから支払い要件を抽出したら、一度確認してから次へ進みます。
-抽出に失敗した場合はここで処理を終了します。
-
-ここまで書いたら、tsxで実行して支払い要件が正しく表示されるか確認しましょう。」
 ```
 
 **コーディング（1行ずつ手入力）:**
@@ -703,26 +709,22 @@ async function payAndAccess() {
   // getPaymentRequiredResponseで、402レスポンスのヘッダーとボディから支払い要件を抽出します。
   // 第1引数はヘッダー取得関数、第2引数はレスポンスボディです。
   const paymentRequired = client.getPaymentRequiredResponse(
-    (name) => response.headers.get(name),
+    (name) => response.headers.get(name), // ヘッダー名から値を返す関数
     body
   );
 
-  // ここで一度支払い要件を確認してから次へ進みます。
-  if (!paymentRequired) {
-    console.error("Failed to extract payment requirements");
-    return;
-  }
   console.log("Payment requirements:", JSON.stringify(paymentRequired));
 ```
 
 **動作確認（サーバー起動中に別ターミナルで実行）:**
 ```bash
+# ここで一度、支払い要件を取得できているか確認していきます。
 npx tsx client.ts
 ```
 
 ```
 「Payerアドレスと、Payment requirements: {...} が表示されればOKです。
-価格やpayTo、networkなどの支払い要件が抽出できているか確認してから、次は支払い処理を実装します。」
+価格やpayTo、networkなどの支払い要件が抽出できているか確認できたので、次は支払い処理を実装します。」
 ```
 
 ---
@@ -731,18 +733,17 @@ npx tsx client.ts
 
 **コーディング（1行ずつ手入力）:**
 ```typescript
-  // 5-4で追加した return を削除し、以下を追加します。支払い要件がわかったので、実際に支払いを行います。
   try {
-    // まず、createPaymentPayloadで署名済みトランザクションを作成します。
+    //  まず、createPaymentPayloadで署名済みトランザクションを作成します。
     const paymentPayload = await client.createPaymentPayload(paymentRequired);
-    // このメソッドの内部では、
+    // （カメラ目線）このメソッドの内部では、
     // 支払い要件に基づいてUSDCトランスファートランザクションを構築し、
     // クライアントの秘密鍵で署名しています。
-    // この時点でトランザクションはまだブロックチェーンに送信されていないことが重要です。
+    // ただこの時点ではトランザクションはまだブロックチェーンに送信されていないことが重要です。
     // クライアントは署名だけを行い、
     // 実際の送信はFacilitatorが行います。　
 
-    // 次に、支払いペイロードをHTTPヘッダーに含められる形式にエンコードします。
+    // （カメラ目線）次に、支払いペイロードをHTTPヘッダーに含められる形式にエンコードします。
     const paymentHeaders = client.encodePaymentSignatureHeader(paymentPayload);
     // x402が期待するヘッダ名はライブラリに合わせる設計なので、
     // このメソッドが返すヘッダをそのまま使います。
