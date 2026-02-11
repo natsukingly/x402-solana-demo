@@ -578,12 +578,8 @@ solana-keygen new --outfile client.json --no-bip39-passphrase
 
 **Devnet USDC の入金:**
 
-クライアントは支払い側なので、USDCが必要です。生成したアドレスにDevnet USDCを入金します。
-
 ```bash
-# まず、生成されたアドレスを確認します。
-solana-keygen pubkey client.json
-
+# クライアントは支払い側なので、USDCが必要です。生成したアドレスにDevnet USDCを入金します。
 # Devnet USDCを取得します（支払い用）。
 # https://faucet.circle.com/ にアクセスし、
 # ネットワークを「Solana Devnet」に設定して、アドレスを入力します。
@@ -634,14 +630,13 @@ import { registerExactSvmScheme } from "@x402/svm/exact/client";
 
 **想定しているコメントの例:**
 ```
-「次に、ウォレットの読み込み処理を実装します。
-先ほど生成したclient.jsonファイルからキーペアを読み込みます。
+「次に、loadPayer関数を実装します。
+client.jsonから秘密鍵を読み込み、支払いトランザクションに署名するためのオブジェクトを返す関数です。
 ```
 
 **コーディング（1行ずつ手入力）:**
 ```typescript
 
-// loadPayer関数を定義します。
 async function loadPayer() {
   const keypairData = JSON.parse(readFileSync("client.json", "utf-8"));
   // client.jsonを読み込み、キーペアのバイト配列を取得
@@ -694,7 +689,7 @@ async function payAndAccess() {
 
 **コーディング（1行ずつ手入力）:**
 ```typescript
-  // まず、fetchでサーバーの/premiumエンドポイントにリクエストを送ります。支払いヘッダーなしなので、402 Payment Requiredが返ってきます。
+  // まず、fetchでサーバーの/premiumエンドポイントにリクエストを送ります。
   const response = await fetch("http://localhost:3001/premium");
 
   if (response.status !== 402) {
@@ -706,12 +701,12 @@ async function payAndAccess() {
 
   // getPaymentRequiredResponseで、402レスポンスのヘッダーとボディから支払い要件を抽出します。
   // 第1引数はヘッダー取得関数、第2引数はレスポンスボディです。
-  const paymentRequired = client.getPaymentRequiredResponse(
+  const paymentRequirement = client.getPaymentRequiredResponse(
     (name) => response.headers.get(name), // ヘッダー名から値を返す関数
     body
   );
 
-  console.log("Payment requirements:", JSON.stringify(paymentRequired));
+  console.log("Payment requirements:", JSON.stringify(paymentRequirement));
 ```
 
 **動作確認（サーバー起動中に別ターミナルで実行）:**
@@ -733,7 +728,7 @@ npx tsx client.ts
 ```typescript
   try {
     //  まず、createPaymentPayloadで署名済みトランザクションを作成します。
-    const paymentPayload = await client.createPaymentPayload(paymentRequired);
+    const paymentPayload = await client.createPaymentPayload(paymentRequirement);
     // （カメラ目線）このメソッドの内部では、
     // 支払い要件に基づいてUSDCトランスファートランザクションを構築し、
     // クライアントの秘密鍵で署名しています。
@@ -939,21 +934,21 @@ async function payAndAccess() {
 
   // 402レスポンスから支払い要件を抽出
   const body = await response.json();
-  const paymentRequired = client.getPaymentRequiredResponse(
+  const paymentRequirement = client.getPaymentRequiredResponse(
     (name) => response.headers.get(name),
     body
   );
 
-  if (!paymentRequired) {
+  if (!paymentRequirement) {
     console.error("Failed to extract payment requirements");
     return;
   }
 
-  console.log("Payment requirements:", JSON.stringify(paymentRequired));
+  console.log("Payment requirements:", JSON.stringify(paymentRequirement));
 
   // 支払いペイロードを作成・署名
   try {
-    const paymentPayload = await client.createPaymentPayload(paymentRequired);
+    const paymentPayload = await client.createPaymentPayload(paymentRequirement);
     const paymentHeaders = client.encodePaymentSignatureHeader(paymentPayload);
 
     // 2回目: 支払いヘッダー付きでリクエスト → 200が返る
