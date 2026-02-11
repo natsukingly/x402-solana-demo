@@ -695,7 +695,7 @@ async function payAndAccess() {
   const response = await fetch("http://localhost:3001/premium");
 
   if (response.status !== 402) {
-    console.log("Unexpected status:", response.status);
+    console.error("Unexpected status:", response.status);
     return;
   }
 
@@ -722,7 +722,7 @@ npx tsx client.ts
 
 ```
 「Payerアドレスと、Payment requirements: {...} が表示されればOKです。
-価格やpayTo、networkなどの支払い要件が抽出できているか確認できたので、次は支払い処理を実装します。」
+価格や支払い先アドレス、networkなどの支払い要件が抽出できているか確認できたので、次は支払い処理を実装します。」
 ```
 
 ---
@@ -731,24 +731,22 @@ npx tsx client.ts
 
 **コーディング（1行ずつ手入力）:**
 ```typescript
-  // 次にトランザクション署名周りの実装を進めていきます。
   // ここからがClient実装の本番です。
   try {
-    //  まず、createPaymentPayloadで署名済みトランザクションを作成します。
+    // まずcreatePaymentPayloadで署名済みトランザクションを作成します。
     const paymentPayload = await client.createPaymentPayload(paymentRequirement);
     // （カメラ目線）このメソッドの内部では、
     // 支払い要件に基づいてUSDCトランスファートランザクションを構築し、
     // クライアントの秘密鍵で署名しています。
     // ただこの時点ではトランザクションはまだブロックチェーンに送信されていないことが重要です。
     // クライアントは署名だけを行い、
-    // 実際の送信はFacilitatorが行います。　
+    // 実際のブロックチェーンへのブロードキャストはFacilitatorが行います。　
 
     // （カメラ目線）次に、支払いペイロードをHTTPヘッダーに含められる形式にエンコードします。
     const paymentHeaders = client.encodePaymentSignatureHeader(paymentPayload);
-    // x402が期待するヘッダ名はライブラリに合わせる設計なので、
-    // このメソッドが返すヘッダをそのまま使います。
 
     // 最後に、支払いヘッダーを付けて、サーバーに再リクエストを送信します。
+    // 最初と同じように、fetchを使ってAPIにリクエストします。
     const paidResponse = await fetch("http://localhost:3001/premium", {
       headers: { ...paymentHeaders },
     });
@@ -797,11 +795,6 @@ Content: {"data":"This is premium content!"}
 
 **想定しているコメントの例:**
 ```
-「クライアントを実行すると、次の流れで処理が進みます。
-まず402が返ってきて、支払い要件を取得します。
-支払いペイロードを作成して、署名します。
-支払いヘッダー付きで再リクエストします。
-そして200でコンテンツを取得します。
 
 出力を確認してみましょう。
 Payment successful!と表示されました。
@@ -832,16 +825,6 @@ Payment successful!と表示されました。
 
 ```
 「これでx402を使った少額決済の実装が完了しました。
-
-最後に、本番環境で使う場合の注意事項をお伝えします。
-
-まず、鍵管理についてです。
-今回はデモのため、秘密鍵をJSONファイルに保存してコードから直接読み込みましたが、セキュリティの観点で問題があるため、実運用では避けるようにしてください。
-
-次に、エラーハンドリングについてです。
-より学習しやすい形でハンズオンを進めるために、決済失敗や例外処理を省略しています。
-本番では、決済失敗時のリトライやユーザーへのエラー通知、
-try-catchによる例外処理を必ず実装してください。
 
 今回作成したサーバーとクライアントをベースに、
 ぜひ色々と試してみてください。
