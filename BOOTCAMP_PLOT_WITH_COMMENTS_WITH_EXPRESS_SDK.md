@@ -302,6 +302,7 @@ ClientとServerは、nodejs環境で機能するtypescriptのコードです。
 ブロックチェーンは、引き続きSolana Devnetです。
 Facilitatorはコインベースのファシリテーターを利用します。
 
+詳細を少し補足していきます。
 サーバー側では、コインベースの公式SDKが提供するpaymentMiddlewareが重要な役割を果たします。
 支払いヘッダーがなければ402と支払い要件を返し、
 支払いヘッダーがあればFacilitatorで検証・決済を行い、通過すればコンテンツを返します。
