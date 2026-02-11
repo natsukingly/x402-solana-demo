@@ -439,8 +439,11 @@ npm install @x402/core @x402/svm @x402/express
 // 先ほどインストールした@x402/expressからpaymentMiddlewareをインポートします。
 // これがExpressアプリにx402の支払い機能を組み込むためのミドルウェアです。
 import { paymentMiddleware } from "@x402/express";
+
 // @x402/core/serverからは、x402ResourceServerとHTTPFacilitatorClientをインポートしますね。
 import { x402ResourceServer, HTTPFacilitatorClient } from "@x402/core/server";
+// x402ResourceServerは支払いの検証・決済を扱う窓口、HTTPFacilitatorClientはFacilitatorと通信するためのクライアントです。
+
 // 続いて、@x402/svm/exact/serverからはExactSvmSchemeをインポートします。
 // ExactSvmSchemeは、指定した金額ぴったりを要求するSolana用の支払いスキームです。
 import { ExactSvmScheme } from "@x402/svm/exact/server";
