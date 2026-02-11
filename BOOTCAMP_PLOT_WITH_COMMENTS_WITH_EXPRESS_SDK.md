@@ -416,10 +416,6 @@ curl http://localhost:3001/free
 
 **パッケージのインストール:**
 ```bash
-# Solana関連のパッケージをインストールします。@solana/kitは、Solanaのウォレット操作やアドレス検証を行うためのSDKです。
-# サーバー側では直接使いませんが、後ほどクライアント側でキーペアの読み込みに使用します。
-npm install @solana/kit
-
 # x402関連のパッケージをインストールします。
 # 今回利用するのはCoinbaseが提供する公式SDKです。
 npm install @x402/core @x402/svm @x402/express
@@ -595,6 +591,12 @@ solana-keygen new --outfile client.json --no-bip39-passphrase
 
 ### 5-1. ファイル作成とインポート（3分）
 
+**パッケージのインストール:**
+```bash
+# クライアント側でキーペアの読み込みに使用します。
+npm install @solana/kit
+```
+
 **ファイル作成:**
 ```bash
 // ではClient側のファイルを作成して、実装に移ります。
@@ -706,7 +708,10 @@ async function payAndAccess() {
     body
   );
 
-  console.log("Payment requirements:", JSON.stringify(paymentRequirement));
+  console.log("Payment requirements:", paymentRequirement);
+}
+  // payAndAccessを呼び出して実行します。
+  payAndAccess().catch(console.error);
 ```
 
 **動作確認（サーバー起動中に別ターミナルで実行）:**
@@ -726,6 +731,8 @@ npx tsx client.ts
 
 **コーディング（1行ずつ手入力）:**
 ```typescript
+  // 次にトランザクション署名周りの実装を進めていきます。
+  // ここからがClient実装の本番です。
   try {
     //  まず、createPaymentPayloadで署名済みトランザクションを作成します。
     const paymentPayload = await client.createPaymentPayload(paymentRequirement);
@@ -761,9 +768,6 @@ npx tsx client.ts
   }
 }
 
-// 最後にpayAndAccessを呼び出して実行します。
-// これでクライアント実装は完成です！
-payAndAccess().catch(console.error);
 ```
 
 ---
