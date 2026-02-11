@@ -416,12 +416,7 @@ curl http://localhost:3001/free
 ### 4-4. x402のセットアップ準備（importとパッケージ）（4分）
 
 **説明:**
-今度は、x402を使った支払い処理を実装するために、必要な準備を行います。
-受取アドレスを用意し、必要なパッケージをインストールしていきます。
-
-**受取アドレスの準備:**
-- payToには、自分が使うウォレットのアドレス（Phantom等）を直接記述します。
-- 重要: 受取先ウォレットにはDevnet USDCを入金しておく必要があります。USDCトークンの受け取りにはAssociated Token Account（ATA）が必要で、Circle Faucet（https://faucet.circle.com/）から少額を送ることでATAが自動作成されます。ATAがないとトランザクションのシミュレーションが失敗します。
+今度は、x402を使った支払い処理を実装するために、必要なライブラリをインストールしていきます。
 
 **パッケージのインストール:**
 ```bash
@@ -436,12 +431,12 @@ npm install @x402/core @x402/svm @x402/express
 # @x402/svmは、Solana Virtual Machine（SVM）用のx402実装です。
 # @x402/expressは、Expressアプリにx402の支払い機能を簡単に組み込むためのミドルウェアです。
 # これらのSDKを使って、x402の支払いフローを実装します。
+# server.tsに戻ってコーディングを再開します。
 ```
 
 **コーディング（1行ずつ手入力）:**
-server.tsに戻ってコーディングを再開します。
 ```typescript
-// 次に、@x402/expressからpaymentMiddlewareをインポートします。
+// 先ほどインストールした@x402/expressからpaymentMiddlewareをインポートします。
 // これがExpressアプリにx402の支払い機能を組み込むためのミドルウェアです。
 import { paymentMiddleware } from "@x402/express";
 // @x402/core/serverからは、x402ResourceServerとHTTPFacilitatorClientをインポートしますね。
